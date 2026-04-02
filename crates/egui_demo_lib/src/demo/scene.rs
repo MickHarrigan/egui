@@ -1,4 +1,4 @@
-use egui::{Pos2, Rect, Scene, Vec2};
+use egui::{Pos2, Rect, Scene, Vec2, Vec2b};
 
 use super::widget_gallery;
 
@@ -6,6 +6,8 @@ use super::widget_gallery;
 pub struct SceneDemo {
     widget_gallery: widget_gallery::WidgetGallery,
     scene_rect: Rect,
+    scroll_enable: Vec2b,
+    zoom_enable: bool,
 }
 
 impl Default for SceneDemo {
@@ -13,6 +15,8 @@ impl Default for SceneDemo {
         Self {
             widget_gallery: widget_gallery::WidgetGallery::default().with_date_button(false), // disable date button so that we don't fail the snapshot test
             scene_rect: Rect::ZERO, // `egui::Scene` will initialize this to something valid
+            scroll_enable: Vec2b::TRUE,
+            zoom_enable: true,
         }
     }
 }
@@ -49,11 +53,22 @@ impl crate::View for SceneDemo {
 
         ui.separator();
 
+        ui.horizontal(|ui| {
+            ui.checkbox(&mut self.scroll_enable.x, "Enable horizontal scrolling");
+            ui.checkbox(&mut self.scroll_enable.y, "Enable vertical scrolling");
+
+            ui.checkbox(&mut self.zoom_enable, "Enable zooming");
+        });
+
+        ui.separator();
+
         egui::Frame::group(ui.style())
             .inner_margin(0.0)
             .show(ui, |ui| {
                 let scene = Scene::new()
                     .max_inner_size([350.0, 1000.0])
+                    .scroll(self.scroll_enable)
+                    .zoom_enabled(self.zoom_enable)
                     .zoom_range(0.1..=2.0);
 
                 let mut reset_view = false;
