@@ -1,6 +1,6 @@
 use core::f32;
 
-use emath::{GuiRounding as _, Pos2};
+use emath::{GuiRounding as _, Pos2, Vec2b};
 
 use crate::{
     InnerResponse, LayerId, PointerButton, Rangef, Rect, Response, Sense, Ui, UiBuilder, Vec2,
@@ -44,6 +44,8 @@ fn fit_to_rect_in_scene(
 #[derive(Clone, Debug)]
 #[must_use = "You should call .show()"]
 pub struct Scene {
+    /// Do we have horizontal/vertical scrolling enabled?
+    direction_enabled: Vec2b,
     zoom_range: Rangef,
     sense: Sense,
     max_inner_size: Vec2,
@@ -76,6 +78,7 @@ bitflags::bitflags! {
 impl Default for Scene {
     fn default() -> Self {
         Self {
+            direction_enabled: Vec2b::TRUE,
             zoom_range: Rangef::new(f32::EPSILON, 1.0),
             sense: Sense::click_and_drag(),
             max_inner_size: Vec2::splat(1000.0),
@@ -111,6 +114,29 @@ impl Scene {
     #[inline]
     pub fn zoom_range(mut self, zoom_range: impl Into<Rangef>) -> Self {
         self.zoom_range = zoom_range.into();
+        self
+    }
+
+    /// Turn on/off scrolling on the horizontal axis.
+    #[inline]
+    pub fn hscroll(mut self, hscroll: bool) -> Self {
+        self.direction_enabled[0] = hscroll;
+        self
+    }
+
+    /// Turn on/off scrolling on the vertical axis.
+    #[inline]
+    pub fn vscroll(mut self, vscroll: bool) -> Self {
+        self.direction_enabled[1] = vscroll;
+        self
+    }
+
+    /// Turn on/off scrolling on the horizontal/vertical axes.
+    ///
+    /// You can pass in `false`, `true`, `[false, true]` etc.
+    #[inline]
+    pub fn scroll(mut self, direction_enabled: impl Into<Vec2b>) -> Self {
+        self.direction_enabled = direction_enabled.into();
         self
     }
 
@@ -245,7 +271,8 @@ impl Scene {
         {
             let pointer_in_scene = to_global.inverse() * mouse_pos;
             let zoom_delta = ui.input(|i| i.zoom_delta());
-            let pan_delta = ui.input(|i| i.smooth_scroll_delta());
+            let pan_delta =
+                ui.input(|i| i.smooth_scroll_delta()) * self.direction_enabled.to_vec2();
 
             // Most of the time we can return early. This is also important to
             // avoid `ui_from_scene` to change slightly due to floating point errors.
