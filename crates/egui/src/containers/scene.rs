@@ -46,6 +46,7 @@ fn fit_to_rect_in_scene(
 pub struct Scene {
     /// Do we have horizontal/vertical scrolling enabled?
     direction_enabled: Vec2b,
+    zoom_enabled: bool,
     zoom_range: Rangef,
     sense: Sense,
     max_inner_size: Vec2,
@@ -79,6 +80,7 @@ impl Default for Scene {
     fn default() -> Self {
         Self {
             direction_enabled: Vec2b::TRUE,
+            zoom_enabled: true,
             zoom_range: Rangef::new(f32::EPSILON, 1.0),
             sense: Sense::click_and_drag(),
             max_inner_size: Vec2::splat(1000.0),
@@ -137,6 +139,13 @@ impl Scene {
     #[inline]
     pub fn scroll(mut self, direction_enabled: impl Into<Vec2b>) -> Self {
         self.direction_enabled = direction_enabled.into();
+        self
+    }
+
+    /// Turn on/off zooming.
+    #[inline]
+    pub fn zoom_enabled(mut self, zoom_enabled: bool) -> Self {
+        self.zoom_enabled = zoom_enabled;
         self
     }
 
@@ -276,11 +285,11 @@ impl Scene {
 
             // Most of the time we can return early. This is also important to
             // avoid `ui_from_scene` to change slightly due to floating point errors.
-            if zoom_delta == 1.0 && pan_delta == Vec2::ZERO {
+            if (!self.zoom_enabled || zoom_delta == 1.0) && pan_delta == Vec2::ZERO {
                 return;
             }
 
-            if zoom_delta != 1.0 {
+            if zoom_delta != 1.0 && self.zoom_enabled {
                 // Zoom in on pointer, but only if we are not zoomed in or out too far.
                 let zoom_delta = zoom_delta.clamp(
                     self.zoom_range.min / to_global.scaling,
