@@ -659,7 +659,7 @@ impl TextEdit<'_> {
                 let mut galley_clone = Arc::clone(&galley);
                 handle_events(ui, &mut galley_clone, layouter, available_width, text);
 
-                get_galley = Some(galley);
+                get_galley = galley;
             } else {
                 // We shrink when clip_text (so we don't exceed the available width and clip) and
                 // in multiline (so the text wraps). `shrink` also keeps a prefix/suffix text atom
@@ -686,7 +686,7 @@ impl TextEdit<'_> {
                         .atom_shrink(should_shrink),
                 );
 
-                get_galley = Some(galley);
+                get_galley = galley;
             }
 
             // TODO(servo/rust-smallvec#146): Use extend_right instead of the loop once we have
@@ -757,7 +757,7 @@ impl TextEdit<'_> {
         let inner_rect = response.rect(inner_rect_id).unwrap_or(Rect::ZERO);
 
         // Our atom closure was now called, so the galley should always be available here
-        let mut galley = get_galley.expect("Galley should be available here");
+        let mut galley = get_galley;
 
         // Don't send `OutputEvent::Clicked` when a user presses the space bar
         response.flags -= response::Flags::FAKE_PRIMARY_CLICKED;
