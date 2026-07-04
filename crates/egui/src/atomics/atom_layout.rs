@@ -403,7 +403,9 @@ impl<'a> AtomLayout<'a> {
         available_size: Vec2,
         cache: &mut MeasureCache<'a>,
     ) -> SizedAtomLayout<'a> {
+        let id = self.id;
         let atoms = &self.atoms;
+        let gap = self.gap;
         let frame = self.frame;
         let mut sense = self.sense;
         let selectable = self.selectable;
@@ -411,10 +413,12 @@ impl<'a> AtomLayout<'a> {
         let mut max_size = self.max_size;
         let direction = self.direction;
         let wrap_mode = self.wrap_mode;
+        let align2 = self.align2;
         let wrap = self.wrap;
         let cross_justify = self.cross_justify;
 
         let fallback_font = self.fallback_font.clone().unwrap_or_default();
+        let fallback_text_color = self.fallback_text_color;
 
         if selectable {
             // Mirror `Label`: sense clicks and drags so the text can be selected,
@@ -445,12 +449,11 @@ impl<'a> AtomLayout<'a> {
             None
         };
 
-        let id = self.id.unwrap_or_else(|| ui.next_auto_id());
+        let id = id.unwrap_or_else(|| ui.next_auto_id());
 
-        let fallback_text_color = self
-            .fallback_text_color
-            .unwrap_or_else(|| ui.style().visuals.text_color());
-        let gap = self.gap.unwrap_or_else(|| ui.spacing().icon_spacing);
+        let fallback_text_color =
+            fallback_text_color.unwrap_or_else(|| ui.style().visuals.text_color());
+        let gap = gap.unwrap_or_else(|| ui.spacing().icon_spacing);
 
         // max_size has no effect in justified layouts. If we'd limit the available size here,
         // the content would be sized differently than the frame which would look weird.
@@ -487,7 +490,7 @@ impl<'a> AtomLayout<'a> {
 
         let mut shrink_item = None;
 
-        let align2 = self.align2.unwrap_or_else(|| {
+        let align2 = align2.unwrap_or_else(|| {
             Align2([ui.layout().horizontal_align(), ui.layout().vertical_align()])
         });
 
