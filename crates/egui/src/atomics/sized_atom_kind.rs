@@ -5,7 +5,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 /// A sized [`crate::AtomKind`].
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum SizedAtomKind<'a> {
     Empty {
         size: Option<Vec2>,
@@ -24,17 +24,6 @@ pub enum SizedAtomKind<'a> {
         /// The layout measured at its natural size, used for the parent's own sizing.
         sized: Box<SizedAtomLayout<'a>>,
     },
-}
-
-impl std::fmt::Debug for SizedAtomKind<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Empty { size } => f.debug_struct("Empty").field("size", size).finish(),
-            Self::Text(galley) => f.debug_tuple("Text").field(galley).finish(),
-            Self::Image { size, .. } => f.debug_struct("Image").field("size", size).finish(),
-            Self::Layout { sized, .. } => f.debug_tuple("Layout").field(sized).finish(),
-        }
-    }
 }
 
 impl Default for SizedAtomKind<'_> {

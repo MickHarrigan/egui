@@ -138,7 +138,7 @@ fn pack_lines(
 ///
 /// You can use this to first allocate a response and then modify, e.g., the [`Frame`] on the
 /// [`AllocatedAtomLayout`] for interaction styling.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AtomLayout<'a> {
     pub(crate) id: Option<Id>,
     pub atoms: Atoms<'a>,

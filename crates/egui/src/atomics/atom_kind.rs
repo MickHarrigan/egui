@@ -69,7 +69,7 @@ impl Debug for AtomKind<'_> {
             AtomKind::Empty => write!(f, "AtomKind::Empty"),
             AtomKind::Text(text) => write!(f, "AtomKind::Text({text:?})"),
             AtomKind::Image(image) => write!(f, "AtomKind::Image({image:?})"),
-            AtomKind::Layout(_) => write!(f, "AtomKind::Layout(<layout>)"),
+            AtomKind::Layout(layout) => write!(f, "AtomKind::Layout({layout:?})"),
         }
     }
 }
