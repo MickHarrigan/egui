@@ -1,6 +1,6 @@
 use crate::{
-    Atom, AtomExt, AtomKind, AtomLayout, Atoms, Button, Color32, Context, Id, InnerResponse,
-    IntoAtoms, Layout, Response, Sense, Spacing, Style, Ui, UiBuilder, Visuals, Widget, WidgetRect,
+    Atom, AtomExt, AtomKind, AtomLayout, Atoms, Button, Context, Id, InnerResponse, IntoAtoms,
+    Layout, Response, Sense, Spacing, Style, Ui, UiBuilder, Visuals, WidgetRect,
 };
 use emath::{Align, Pos2, Rect, Vec2};
 use epaint::Direction;
@@ -27,23 +27,23 @@ pub trait AtomWidget<'a> {
 }
 
 impl<'a> AtomWidget<'a> for AtomLayout<'a> {
-    fn atom_ui(self, ui: &mut AtomWidgetContext, response: &mut Response) -> AtomLayout<'a> {
+    fn atom_ui(self, _ui: &mut AtomWidgetContext, _response: &mut Response) -> AtomLayout<'a> {
         self
     }
 }
 
 impl<'a> AtomWidget<'a> for Atom<'a> {
-    fn atom_ui(self, ui: &mut AtomWidgetContext, response: &mut Response) -> AtomLayout<'a> {
+    fn atom_ui(self, _ui: &mut AtomWidgetContext, _response: &mut Response) -> AtomLayout<'a> {
         AtomLayout::new(self)
     }
 }
 impl<'a> AtomWidget<'a> for AtomKind<'a> {
-    fn atom_ui(self, ui: &mut AtomWidgetContext, response: &mut Response) -> AtomLayout<'a> {
+    fn atom_ui(self, _ui: &mut AtomWidgetContext, _response: &mut Response) -> AtomLayout<'a> {
         AtomLayout::new(self)
     }
 }
 impl<'a> AtomWidget<'a> for Atoms<'a> {
-    fn atom_ui(self, ui: &mut AtomWidgetContext, response: &mut Response) -> AtomLayout<'a> {
+    fn atom_ui(self, _ui: &mut AtomWidgetContext, _response: &mut Response) -> AtomLayout<'a> {
         AtomLayout::new(self)
     }
 }
@@ -151,7 +151,7 @@ impl<'ui, 'layout> AtomUi<'ui, 'layout> {
         &mut self,
         builder: AtomLayout<'layout>,
         mut atom: Atom<'layout>,
-        add_content: impl FnOnce(&mut AtomUi) -> R,
+        add_content: impl FnOnce(&mut AtomUi<'_, 'layout>) -> R,
     ) -> InnerResponse<R> {
         let mut child = AtomUi::new(self.ctx, builder);
         let inner = add_content(&mut child);
@@ -167,7 +167,7 @@ impl<'ui, 'layout> AtomUi<'ui, 'layout> {
     pub fn vertical<R>(
         &mut self,
         atom: Atom<'layout>,
-        add_content: impl FnOnce(&mut AtomUi) -> R,
+        add_content: impl FnOnce(&mut AtomUi<'_, 'layout>) -> R,
     ) -> InnerResponse<R> {
         self.scope_builder(
             AtomLayout::default().direction(Direction::TopDown),
@@ -184,11 +184,11 @@ impl<'ui, 'layout> AtomUi<'ui, 'layout> {
     pub fn immediate_scope<R>(
         &mut self,
         mut ui_builder: UiBuilder,
-        mut atom: Atom<'layout>,
+        atom: Atom<'layout>,
         add_content: impl FnOnce(&mut Ui) -> R,
     ) -> InnerResponse<R> {
         let sizing_id = self.ctx.make_auto_id();
-        let mut sizing_response = self.ctx.read_response(sizing_id);
+        let sizing_response = self.ctx.read_response(sizing_id);
 
         let mut size = Vec2::ZERO;
         if sizing_response.rect.is_finite() && sizing_response.rect.is_positive() {
@@ -252,21 +252,24 @@ impl<'ui, 'layout> AtomUi<'ui, 'layout> {
 }
 
 impl Ui {
-    pub fn atom_builder<T>(
+    pub fn atom_builder<'layout, T>(
         &mut self,
-        builder: AtomLayout,
-        add_contents: impl FnOnce(&mut AtomUi) -> T,
+        builder: AtomLayout<'layout>,
+        add_contents: impl FnOnce(&mut AtomUi<'_, 'layout>) -> T,
     ) -> InnerResponse<T> {
         let mut ui = AtomUi::new(self, builder);
         let inner = add_contents(&mut ui);
-        let AtomUi { ctx, layout } = ui;
+        let AtomUi { ctx: _, layout } = ui;
         InnerResponse {
             inner,
             response: self.add(layout),
         }
     }
 
-    pub fn atom<T>(&mut self, add_contents: impl FnOnce(&mut AtomUi) -> T) -> InnerResponse<T> {
+    pub fn atom<T>(
+        &mut self,
+        add_contents: impl FnOnce(&mut AtomUi<'_, '_>) -> T,
+    ) -> InnerResponse<T> {
         self.atom_builder(AtomLayout::default(), add_contents)
     }
 }
